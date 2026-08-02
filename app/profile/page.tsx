@@ -1,129 +1,159 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-type Dokumen = {
-  id: string;
-  file_name: string;
-  file_type: string;
-  file_url: string;
-};
-
 export default function ProfilePage() {
-  const [dokumen, setDokumen] = useState<Dokumen[]>([]);
+
+  const [form, setForm] = useState({
+    nama: "",
+    email: "",
+    telepon: "",
+    pendidikan: "",
+    pengalaman: "",
+    keahlian: "",
+  });
+
 
   useEffect(() => {
-    loadDokumen();
+    loadProfile();
   }, []);
 
-  async function loadDokumen() {
+
+  async function loadProfile() {
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
+
     if (!user) return;
 
+
     const { data } = await supabase
-      .from("documents")
+      .from("profiles")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .single();
 
-    if (data) setDokumen(data);
+
+    if (data) {
+      setForm({
+        nama: data.nama || "",
+        email: data.email || "",
+        telepon: data.telepon || "",
+        pendidikan: data.pendidikan || "",
+        pengalaman: data.pengalaman || "",
+        keahlian: data.keahlian || "",
+      });
+    }
+
   }
 
-  async function hapus(item: Dokumen) {
-    const yakin = confirm("Hapus dokumen ini?");
-    if (!yakin) return;
 
-    await supabase.storage
-      .from("documents")
-      .remove([item.file_url]);
 
-    await supabase
-      .from("documents")
-      .delete()
-      .eq("id", item.id);
+  async function saveProfile() {
 
-    loadDokumen();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+
+    if (!user) {
+      alert("Silakan login");
+      return;
+    }
+
+
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        user_id: user.id,
+        ...form,
+      });
+
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+
+    alert("Profil berhasil disimpan.");
+
   }
 
-  function tampil(jenis: string) {
-    const data = dokumen.filter(
-      (d) => d.file_type === jenis
-    );
 
-    return (
-      <div className="bg-slate-800 p-4 rounded-xl mb-4">
-        <h2 className="text-xl font-bold mb-3">
-          Jenis: {jenis}
-        </h2>
-
-        {data.length === 0 ? (
-          <p className="text-gray-400">
-            Belum ada file.
-          </p>
-        ) : (
-          data.map((item) => (
-            <div
-              key={item.id}
-              className="border-b border-slate-700 py-3"
-            >
-              <p className="font-semibold">
-                Nama File:
-              </p>
-
-              <p>{item.file_name}</p>
-
-              <br />
-
-              <a
-                href={`https://czsperfcuxfhshiwlosk.supabase.co/storage/v1/object/public/documents/${item.file_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline"
-              >
-                Lihat Dokumen
-              </a>
-
-              <br />
-                            <p className="text-xs text-gray-400 break-all mt-2">
-                {item.file_url}
-              </p>
-
-              <button
-                onClick={() => hapus(item)}
-                className="mt-4 bg-red-600 px-4 py-2 rounded"
-              >
-                Hapus
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-    );
-  }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-10">
-      <h1 className="text-4xl font-bold text-blue-400 mb-8">
-        📁 Dokumen Saya
+    <main className="max-w-3xl mx-auto p-6">
+
+      <h1 className="text-3xl font-bold mb-6">
+        Profil Saya
       </h1>
 
-      {tampil("KTP")}
-      {tampil("SIM")}
-      {tampil("Ijazah")}
-      {tampil("Sertifikat")}
-      {tampil("Pengalaman")}
-      {tampil("CV")}
 
-      <Link href="/dashboard">
-        <button className="bg-blue-600 px-5 py-3 rounded mt-6">
-          Kembali ke Dashboard
+      <div className="space-y-4">
+
+
+        <input
+          className="w-full border p-3 rounded"
+          placeholder="Nama"
+          value={form.nama}
+          onChange={(e) => setForm({...form, nama:e.target.value})}
+        />
+
+
+        <input
+          className="w-full border p-3 rounded"
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({...form, email:e.target.value})}
+        />
+
+
+        <input
+          className="w-full border p-3 rounded"
+          placeholder="Telepon"
+          value={form.telepon}
+          onChange={(e) => setForm({...form, telepon:e.target.value})}
+        />
+
+
+        <input
+          className="w-full border p-3 rounded"
+          placeholder="Pendidikan"
+          value={form.pendidikan}
+          onChange={(e) => setForm({...form, pendidikan:e.target.value})}
+        />
+
+
+        <input
+          className="w-full border p-3 rounded"
+          placeholder="Pengalaman"
+          value={form.pengalaman}
+          onChange={(e) => setForm({...form, pengalaman:e.target.value})}
+        />
+
+
+        <input
+          className="w-full border p-3 rounded"
+          placeholder="Keahlian"
+          value={form.keahlian}
+          onChange={(e) => setForm({...form, keahlian:e.target.value})}
+        />
+
+
+        <button
+          onClick={saveProfile}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+        >
+          Simpan Profil
         </button>
-      </Link>
+
+
+      </div>
+
     </main>
   );
 }

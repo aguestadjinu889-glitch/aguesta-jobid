@@ -6,7 +6,6 @@ const client = new OpenAI({
 });
 
 export async function POST(req: Request) {
-  console.log("API AI-CV dipanggil");
   try {
     const body = await req.json();
 
@@ -18,18 +17,18 @@ Pendidikan: ${body.pendidikan}
 Pengalaman: ${body.pengalaman}
 Keahlian: ${body.keahlian}
 
-Berikan hasil dengan format:
+Berikan hasil:
 
 Nilai CV: xx/100
 
 Kelebihan:
-- ...
+- 
 
 Kekurangan:
-- ...
+-
 
 Saran:
-- ...
+-
 `;
 
     const response = await client.responses.create({
@@ -45,7 +44,7 @@ Saran:
     console.error(error);
 
     return NextResponse.json({
-      message: String(error),
+      message: error.message,
     });
   }
 }

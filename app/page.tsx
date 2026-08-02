@@ -1,157 +1,50 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-
-export default function UploadPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [jenis, setJenis] = useState("KTP");
-  const [status, setStatus] = useState("");
-  const [dokumen, setDokumen] = useState<string[]>([]);
-  const [userId, setUserId] = useState("");
-
-  async function cekUser() {
-    const { data } = await supabase.auth.getUser();
-
-    if (data.user) {
-      setUserId(data.user.id);
-    }
-  }
-
-  async function loadDokumen() {
-    if (!userId) return;
-
-    const { data, error } = await supabase.storage
-      .from("documents")
-      .list(`${userId}/${jenis.toLowerCase()}`);
-
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    setDokumen(data.map((item) => item.name));
-  }
-
-  useEffect(() => {
-    cekUser();
-  }, []);
-
-  useEffect(() => {
-    loadDokumen();
-  }, [jenis, userId]);
-
-  async function uploadFile() {
-    if (!file) {
-      setStatus("Pilih file dulu");
-      return;
-    }
-
-    const fileName = file.name;
-
-    const { error } = await supabase.storage
-      .from("documents")
-      .upload(
-        `${userId}/${jenis.toLowerCase()}/${fileName}`,
-        file
-      );
-
-    if (error) {
-      setStatus("Upload gagal: " + error.message);
-      return;
-    }
-
-    setStatus("Upload berhasil");
-    setFile(null);
-    loadDokumen();
-  }
-
-  async function hapusFile(nama: string) {
-    await supabase.storage
-      .from("documents")
-      .remove([
-        `${userId}/${jenis.toLowerCase()}/${nama}`
-      ]);
-
-    loadDokumen();
-  }
-
-  function lihatFile(nama: string) {
-    const url = supabase.storage
-      .from("documents")
-      .getPublicUrl(
-        `${userId}/${jenis.toLowerCase()}/${nama}`
-      )
-      .data.publicUrl;
-
-    window.open(url, "_blank");
-  }
-
+export default function Home() {
   return (
-    <main className="p-8">
+    <main className="min-h-screen bg-gray-100">
 
-      <h1 className="text-2xl font-bold mb-5">
-        Upload Dokumen
-      </h1>
+      <header className="bg-blue-700 text-white p-5">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
 
-      <select
-        className="border p-2 mb-4"
-        value={jenis}
-        onChange={(e) => setJenis(e.target.value)}
-      >
-        <option>KTP</option>
-        <option>SIM</option>
-        <option>Ijazah</option>
-        <option>CV</option>
-        <option>Sertifikat</option>
-      </select>
+          <h1 className="text-3xl font-bold">
+            JobID AI Aguesta
+          </h1>
 
-      <input
-        type="file"
-        onChange={(e) =>
-          setFile(e.target.files?.[0] || null)
-        }
-      />
+          <div className="space-x-3">
 
-      <button
-        onClick={uploadFile}
-        className="bg-blue-600 text-white px-5 py-2 mt-4 rounded"
-      >
-        Upload
-      </button>
+  <a
+    href="/login"
+    className="bg-white text-blue-700 px-4 py-2 rounded-lg font-semibold"
+  >
+    Login
+  </a>
 
-      <p className="mt-3">
-        {status}
-      </p>
+  <a
+    href="/register"
+    className="bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold"
+  >
+    Daftar
+  </a>
 
-      <hr className="my-6" />
+</div>
 
-      <h2 className="text-xl font-bold">
-        Dokumen Saya ({jenis})
-      </h2>
-
-      {dokumen.map((nama) => (
-        <div
-          key={nama}
-          className="border p-3 mt-3 rounded"
-        >
-          <p>{nama}</p>
-
-          <button
-            onClick={() => lihatFile(nama)}
-            className="bg-green-600 text-white px-3 py-1 rounded mr-2"
-          >
-            Lihat
-          </button>
-
-          <button
-            onClick={() => hapusFile(nama)}
-            className="bg-red-600 text-white px-3 py-1 rounded"
-          >
-            Hapus
-          </button>
         </div>
-      ))}
+      </header>
+
+      <section className="max-w-7xl mx-auto py-20 text-center">
+
+        <h2 className="text-5xl font-bold mb-6">
+          Cari Kerja Lebih Cepat Dengan AI
+        </h2>
+
+        <p className="text-xl text-gray-600 mb-10">
+          Upload CV • AI Mencocokkan Lowongan • Interview AI • Lamaran Otomatis
+        </p>
+
+        <button className="bg-blue-700 text-white px-8 py-4 rounded-xl text-xl">
+          Mulai Sekarang
+        </button>
+
+      </section>
 
     </main>
   );

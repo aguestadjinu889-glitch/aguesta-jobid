@@ -1,0 +1,119 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+type Application = {
+  id: string;
+  nama: string;
+  email: string;
+  created_at: string;
+  job_id: string;
+};
+
+type Job = {
+  posisi: string;
+  perusahaan: string;
+  lokasi: string;
+};
+
+export default function ApplicationsPage() {
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadApplications() {
+      try {
+        const { data, error } = await supabase
+          .from("applications")
+          .select(`
+            id,
+            nama,
+            email,
+            created_at,
+            jobs (
+              posisi,
+              perusahaan,
+              lokasi
+            )
+          `)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setApplications(data || []);
+
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadApplications();
+  }, []);
+
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        Memuat lamaran...
+      </div>
+    );
+  }
+
+
+  return (
+    <main className="max-w-5xl mx-auto p-8">
+
+      <h1 className="text-3xl font-bold mb-8">
+        Lamaran Saya
+      </h1>
+
+
+      {applications.length === 0 ? (
+        <p>
+          Belum ada lamaran.
+        </p>
+      ) : (
+
+        applications.map((item) => (
+
+          <div
+            key={item.id}
+            className="border rounded-xl p-5 mb-5 shadow"
+          >
+
+            <h2 className="text-xl font-bold">
+              {item.jobs?.posisi}
+            </h2>
+
+            <p>
+              {item.jobs?.perusahaan}
+            </p>
+
+            <p>
+              Lokasi: {item.jobs?.lokasi}
+            </p>
+
+            <p>
+              Pelamar: {item.nama}
+            </p>
+
+            <p>
+              Email: {item.email}
+            </p>
+
+            <p className="mt-3 text-gray-500">
+              Status: Menunggu
+            </p>
+
+          </div>
+
+        ))
+
+      )}
+
+    </main>
+  );
+}

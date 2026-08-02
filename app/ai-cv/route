@@ -1,0 +1,91 @@
+import OpenAI from "openai";
+import { NextResponse } from "next/server";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+
+export async function POST(req: Request) {
+
+  try {
+
+    const data = await req.json();
+
+
+    const prompt = `
+Analisa CV berikut:
+
+Nama:
+${data.nama}
+
+Pendidikan:
+${data.pendidikan}
+
+Pengalaman:
+${data.pengalaman}
+
+Keahlian:
+${data.keahlian}
+
+
+Berikan hasil JSON dengan format:
+
+{
+"score":85,
+"strengths":[
+"kelebihan 1",
+"kelebihan 2"
+],
+"weaknesses":[
+"kekurangan 1",
+"kekurangan 2"
+],
+"recommendation":"saran AI"
+}
+
+Jangan beri teks lain selain JSON.
+`;
+
+
+    const result = await openai.chat.completions.create({
+
+      model:"gpt-4.1-mini",
+
+      messages:[
+        {
+          role:"user",
+          content:prompt
+        }
+      ],
+
+      response_format:{
+        type:"json_object"
+      }
+
+    });
+
+
+
+    const hasil = JSON.parse(
+      result.choices[0].message.content || "{}"
+    );
+
+
+    return NextResponse.json(hasil);
+
+
+  } catch(error:any){
+
+    return NextResponse.json(
+      {
+        error:error.message
+      },
+      {
+        status:500
+      }
+    );
+
+  }
+
+}
